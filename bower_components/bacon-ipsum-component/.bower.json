@@ -1,0 +1,28 @@
+{
+  "name": "bacon-ipsum",
+  "version": "0.0.1",
+  "keywords": [
+    "seed",
+    "polymer",
+    "web-components"
+  ],
+  "main": "bacon-ipsum.html",
+  "dependencies": {
+    "polymer": "Polymer/polymer#^0.5.1",
+    "core-ajax": "Polymer/core-ajax#~0.5.2"
+  },
+  "devDependencies": {
+    "web-component-tester": "Polymer/web-component-tester#^2.0.0"
+  },
+  "homepage": "https://github.com/Tasemu/bacon-ipsum",
+  "_release": "0.0.1",
+  "_resolution": {
+    "type": "version",
+    "tag": "0.0.1",
+    "commit": "70c25092b8e8efed608b4450f4012537cee37e2e"
+  },
+  "_source": "git://github.com/Tasemu/bacon-ipsum.git",
+  "_target": "~0.0.1",
+  "_originalSource": "bacon-ipsum-component",
+  "_direct": true
+}

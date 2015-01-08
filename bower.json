@@ -1,19 +1,26 @@
 {
-    "name": "my-repo",
-    "version": "0.0.0",
-    "description": "My awesome Custom Element",
-    "license": "MIT",
-    "main": "dist/my-element.html",
-    "keywords": [
-        "polymer",
-        "web-components"
-    ],
-    "ignore": [
-        "**/.*",
-        "node_modules",
-        "bower_components"
-    ],
-    "dependencies": {
-        "polymer": "Polymer/polymer#^0.5.1"
-    }
+  "name": "my-repo",
+  "version": "0.0.0",
+  "description": "My awesome Custom Element",
+  "license": "MIT",
+  "main": "dist/my-element.html",
+  "keywords": [
+    "polymer",
+    "web-components"
+  ],
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components"
+  ],
+  "dependencies": {
+    "polymer": "Polymer/polymer#^0.5.1",
+    "core-splitter": "Polymer/core-splitter#~0.5.2",
+    "bacon-ipsum-component": "~0.0.1",
+    "core-drag-drop": "Polymer/core-drag-drop#~0.5.2",
+    "core-header-panel": "Polymer/core-header-panel#~0.5.2",
+    "core-collapse": "Polymer/core-collapse#~0.5.2",
+    "paper-button": "Polymer/paper-button#~0.5.2",
+    "paper-dialog": "Polymer/paper-dialog#~0.5.2"
+  }
 }

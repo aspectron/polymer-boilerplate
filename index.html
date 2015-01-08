@@ -1,19 +1,35 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <title>&lt;my-repo&gt;</title>
+	<meta charset="UTF-8">
+	<title>Polymer-Dashboard</title>
 
-    <!-- Importing Web Component's Polyfill -->
-    <script src="bower_components/webcomponentsjs/webcomponents.min.js"></script>
+	<!-- Importing Web Component's Polyfill -->
+	<script src="bower_components/webcomponentsjs/webcomponents.min.js"></script>
 
-    <!-- Importing Custom Elements -->
-    <link rel="import" href="src/my-element.html">
+	<!-- Importing Custom Elements -->
+	<link rel="import" href="src/polymer-dashboard.html">
 </head>
 <body>
+	<style>
 
-    <!-- Using Custom Elements -->
-    <my-element></my-element>
+	.container {
+		height: 240px;
+		border: 4px solid #aaa;
+	}
+
+	#box1, #box3, #box5, #box6 {
+		width: 100px;
+	}
+
+	#box2, #box4 {
+		height: 40px;
+	}
+
+	</style>
+
+	<!-- Using Custom Elements -->
+	<polymer-dashboard></polymer-dashboard>
 
 </body>
 </html>
