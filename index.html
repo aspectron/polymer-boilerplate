@@ -2,34 +2,87 @@
 <html>
 <head>
 	<meta charset="UTF-8">
-	<title>Polymer-Dashboard</title>
+	<title>BRT-Dashboard</title>
 
 	<!-- Importing Web Component's Polyfill -->
 	<script src="bower_components/webcomponentsjs/webcomponents.min.js"></script>
 
 	<!-- Importing Custom Elements -->
-	<link rel="import" href="src/polymer-dashboard.html">
+	<link rel="import" href="src/brt-dashboard.html">
+<link rel="import" href="bower_components/brt-ipsum/brt-ipsum.html">
 </head>
 <body>
 	<style>
-
-	.container {
-		height: 240px;
-		border: 4px solid #aaa;
+	brt-dashboard{
+		height: 100%;
+		display: block;
+		overflow: auto !important;
 	}
-
-	#box1, #box3, #box5, #box6 {
-		width: 100px;
+	brt-panel{
+		min-width: 100px;
 	}
-
-	#box2, #box4 {
-		height: 40px;
-	}
-
 	</style>
 
-	<!-- Using Custom Elements -->
-	<polymer-dashboard></polymer-dashboard>
+	<!-- Using Custom Elements 
+	<button onclick="addpanel()">Add Panel</button>-->
+	<brt-dashboard>
+		<brt-dashboard-column style="width:30%">
+			<brt-panel heading="Panel 1">
+				<brt-ipsum></brt-ipsum>
+			</brt-panel>
+			<brt-panel heading="Panel 2">
+				<brt-ipsum></brt-ipsum>
+			</brt-panel>
+		</brt-dashboard-column>
+		<core-splitter direction="left"></core-splitter>
 
+		<brt-dashboard-column flex vertical>
+
+			<brt-dashboard-column horizontal layout id="top-right">
+				<brt-panel heading="Panel 3">
+					<brt-ipsum></brt-ipsum>
+				</brt-panel>
+				<brt-panel heading="Panel 3-2">
+					<brt-ipsum></brt-ipsum>
+				</brt-panel>
+			</brt-dashboard-column>
+
+			<core-splitter direction="up"></core-splitter>
+
+			<brt-dashboard-column>
+				<brt-panel heading="Panel 4">
+					<brt-ipsum></brt-ipsum>
+				</brt-panel>
+				<brt-panel heading="Panel 5">
+					<brt-ipsum></brt-ipsum>
+				</brt-panel>
+			</brt-dashboard-column>
+		</brt-dashboard-column>
+	</brt-dashboard>
+
+	<script type="text/javascript">
+		function createPanel(){
+			var c		= document.createElement('brt-panel');
+			c.heading	= "Panel " + (new Date()).getTime();
+			c.innerHTML	= '<brt-ipsum></brt-ipsum>';
+			return c;
+		}
+		function addpanel(){
+			var dashboard = document.querySelector('brt-dashboard');
+			dashboard.add(createPanel())
+		}
+		window.addEventListener('polymer-ready', function(e) {
+			var dashboard		= document.querySelector('brt-dashboard');
+			var topRightColumn 	= document.getElementById('top-right');
+			topRightColumn.appendChild(createPanel());
+
+			/*c.opened = false;
+			setTimeout(function(){
+			c.opened = true;
+			}, 5000)
+			//xFoo.barProperty = 'baz';
+			*/
+		});
+	</script>
 </body>
 </html>

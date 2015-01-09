@@ -1,0 +1,197 @@
+<!-- Import Polymer -->
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/brt-panel/brt-panel.html">
+<link rel="import" href="../bower_components/core-splitter/core-splitter.html">
+<!-- Define your custom element -->
+<polymer-element name="brt-dashboard-column">
+    <content></content>
+    <script>
+        Polymer('brt-dashboard-column', {
+            observe: {
+                'this.childNodes.length': 'onChildAddRemove'
+            },
+
+            onChildAddRemove: function() {
+                this.onMutation(this, this.onChildAddRemove);
+                this.removeSiblingIfEmpty();
+            },
+
+            removeSiblingIfEmpty: function(){
+                var self = this;
+                if (self.querySelectorAll('brt-panel').length == 0) {
+                    var siblingColumn = false, siblingSpliter = false;
+                    if (self.nextElementSibling && self.nextElementSibling.tagName == 'CORE-SPLITTER') {
+                        siblingSpliter = self.nextElementSibling;
+                    }
+                    siblingColumn = siblingSpliter ? siblingSpliter.nextElementSibling : false;
+                    if (self.previousElementSibling && self.previousElementSibling.tagName == 'CORE-SPLITTER') {
+                        if (!siblingColumn) {
+                            siblingColumn = self.previousElementSibling.previousElementSibling;
+                        };
+                        if(!siblingSpliter){
+                            siblingSpliter = self.previousElementSibling;
+                        }
+                    };
+                    console.log('siblingSpliter', siblingSpliter, self.previousElementSibling, self.nextElementSibling)
+                    siblingSpliter && siblingSpliter.remove();
+                    self.remove();
+                    if (siblingColumn && siblingColumn.tagName == this.tagName) {
+                        console.log('siblingColumn', siblingColumn, siblingColumn.parentNode, siblingColumn.parentNode.horizontal)
+                        //if (siblingColumn.parentNode.horizontal) {
+                            siblingColumn.style.width = 'auto';
+                        //}else{
+                            siblingColumn.style.height = 'auto';
+                        //}
+                    };
+                }
+            },
+
+            attributeChanged: function(name, oldValue, newValue){
+                console.log('oldValue', name, oldValue, newValue)
+            },
+
+            // Fires when an instance of the element is created
+            created: function() {},
+
+            // Fires when the element’s initial set of children and siblings are guaranteed to exist
+            domReady: function() {
+
+                //console.log('this.style.width', this.style.width)
+                this.onMutation(this, this.onChildAddRemove);
+                //this.style.width = '60%';
+                
+            }
+        });
+    </script>
+</polymer-element>
+
+<polymer-element name="brt-dashboard">
+    <template>
+        <style>
+            :host{
+                user-select: none;
+                -webkit-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
+            }
+            ::content brt-dashboard-column{
+                display: block;
+                overflow: auto !important;
+            }
+            ::content brt-panel, ::content .panel-proxy{
+                margin: 5px;
+            }
+            ::content core-splitter{
+                width: 5px;
+                opacity:0;
+            }
+            ::content core-splitter:hover, ::content core-splitter:active{
+                opacity:1;
+            }
+            ::content core-splitter.horizontal{
+                height: 5px;
+                width: auto;
+            }
+            ::content .panel-proxy{
+                border: 2px dashed #dedede;
+                background-color: #eeeeee;
+                box-sizing: border-box;
+                min-width: 100px;
+                min-height: 100px;
+            }
+        </style>
+        <div id="container" horizontal layout>
+            <content></content>
+        </div>
+    </template>
+    <script>
+    (function() {
+        var proxy;
+        function getStyle(elem,prop){
+            if (elem.currentStyle) {
+                var res= elem.currentStyle.margin;
+            } else if (window.getComputedStyle) {
+                if (window.getComputedStyle.getPropertyValue){
+                    var res= window.getComputedStyle(elem, null).getPropertyValue(prop)
+                }else{
+                    var res =window.getComputedStyle(elem)[prop];
+                };
+            }
+            return res;
+        }
+        Polymer('brt-dashboard', {
+            // Fires when an instance of the element is created
+            created: function() {
+                if (!proxy) {
+                    proxy = document.createElement('div');
+                    proxy.heading   = 'PROXY';
+                    proxy.className = 'panel-proxy';
+                };
+            },
+
+            // Fires when the element’s initial set of children and siblings are guaranteed to exist
+            domReady: function() {
+            },
+
+            // Fires when the "<polymer-element>" has been fully prepared
+            ready: function() {},
+
+            // Fires when the element was inserted into the document
+            attached: function() {
+                this.addEventListener('drag-start', this.onPanelDragStart.bind(this))
+            },
+
+            onPanelDragStart: function(ce){
+                //console.log('onPanelDragStart', ce.detail)
+                var target = ce.target, column = target.parentNode;
+                var targetBox = target.getBoundingClientRect();
+                //proxy.style.width = targetBox.width+'px';
+                //proxy.style.height = targetBox.height+'px';
+                column.insertBefore(proxy, target);
+                this.async(function(){
+                    target.style._display = target.style.display;
+                    target.style.display = 'none';
+                }, null, 10);
+
+                ce.detail.drag = function(dragInfo){
+                    var p = this.findPanelByPos(dragInfo.p);
+                    if (p) {
+                        p.parentNode.insertBefore(proxy, p);
+                    };
+                }.bind(this)
+
+                ce.detail.drop = function(dragInfo){
+                    target.style.display = target.style._display;
+                    proxy.parentNode.insertBefore(target, proxy);
+                    proxy.remove();
+                }
+            },
+
+            findPanelByPos: function(pos){
+                var panels = this.querySelectorAll('brt-panel'), len = panels.length, p;
+                for(var i=0; i< len; i++){
+                    p = panels[i];
+                    if(this.isPanelIntersect(p, pos)){
+                        return p;
+                    }
+                }
+                return false;
+            },
+
+            isPanelIntersect: function(panel, pos){
+                var box = panel.getBoundingClientRect();
+                return (box.left <= pos.x && pos.x <= box.right && box.top <= pos.y && pos.y <= box.bottom)
+                //console.log(panel.heading, intersect, box, pos);
+                //return intersect;
+            },
+
+            // Fires when the element was removed from the document
+            detached: function() {},
+
+            // Fires when an attribute was added, removed, or updated
+            attributeChanged: function(attr, oldVal, newVal) {}
+        });
+    })();
+    </script>
+
+</polymer-element>
