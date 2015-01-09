@@ -14,19 +14,36 @@
 <body>
 	<style>
 	brt-dashboard{
-		height: 100%;
+		height: 600px;
 		display: block;
-		overflow: auto !important;
+		overflow-y: scroll !important;
 	}
 	brt-panel{
 		min-width: 100px;
 	}
 	</style>
 
-	<!-- Using Custom Elements 
-	<button onclick="addpanel()">Add Panel</button>-->
+	<!-- Using Custom Elements -->
+	<button onclick="addpanel()">Add Panel</button>
 	<brt-dashboard>
-		<brt-dashboard-column style="width:30%">
+			<!--<brt-dashboard-column>
+				<brt-panel heading="Panel 3">
+					<brt-ipsum></brt-ipsum>
+				</brt-panel>
+				<brt-panel heading="Panel 3-2">
+					<brt-ipsum></brt-ipsum>
+				</brt-panel>
+			</brt-dashboard-column>
+			<brt-dashboard-splitter direction="left"></brt-dashboard-splitter>
+			<brt-dashboard-column>
+				<brt-panel heading="Panel 3">
+					<brt-ipsum></brt-ipsum>
+				</brt-panel>
+				<brt-panel heading="Panel 3-2">
+					<brt-ipsum></brt-ipsum>
+				</brt-panel>
+			</brt-dashboard-column>
+		 <brt-dashboard-column style="width:30%">
 			<brt-panel heading="Panel 1">
 				<brt-ipsum></brt-ipsum>
 			</brt-panel>
@@ -34,7 +51,7 @@
 				<brt-ipsum></brt-ipsum>
 			</brt-panel>
 		</brt-dashboard-column>
-		<core-splitter direction="left"></core-splitter>
+		<brt-dashboard-splitter direction="left"></brt-dashboard-splitter>
 
 		<brt-dashboard-column flex vertical>
 
@@ -47,7 +64,7 @@
 				</brt-panel>
 			</brt-dashboard-column>
 
-			<core-splitter direction="up"></core-splitter>
+			<brt-dashboard-splitter direction="up"></brt-dashboard-splitter>
 
 			<brt-dashboard-column>
 				<brt-panel heading="Panel 4">
@@ -57,7 +74,7 @@
 					<brt-ipsum></brt-ipsum>
 				</brt-panel>
 			</brt-dashboard-column>
-		</brt-dashboard-column>
+		</brt-dashboard-column>-->
 	</brt-dashboard>
 
 	<script type="text/javascript">
@@ -74,7 +91,7 @@
 		window.addEventListener('polymer-ready', function(e) {
 			var dashboard		= document.querySelector('brt-dashboard');
 			var topRightColumn 	= document.getElementById('top-right');
-			topRightColumn.appendChild(createPanel());
+			//topRightColumn.appendChild(createPanel());
 
 			/*c.opened = false;
 			setTimeout(function(){

@@ -1,0 +1,11 @@
+<link rel="import" href="../polymer/polymer.html">
+<polymer-element name="brt-html" arributes="content">
+  <script>
+    Polymer('brt-html', {
+      attributeChanged: function(a, v, value){
+        if (a=='content')
+          this.innerHTML = value;
+      }
+    });
+  </script>
+</polymer-element>
