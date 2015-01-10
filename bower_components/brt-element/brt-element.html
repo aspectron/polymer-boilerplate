@@ -1,0 +1,20 @@
+<script>
+	var BRT = {};
+	BRT.element = {
+		setWidth: function(value){
+			this.setStyle('width', value+'px');
+		},
+		setHeight: function(value){
+			this.setStyle('height', value+'px');
+		},
+
+		setStyle: function(name, value){
+			this.style[name] = value;
+			this.onStyleUpdate(name, value);
+		},
+
+		onStyleUpdate: function(name, value){
+
+		}
+	}
+</script>

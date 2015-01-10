@@ -1,9 +1,10 @@
 <!-- Import Polymer -->
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="../bower_components/brt-panel/brt-panel.html">
+<link rel="import" href="../bower_components/brt-element/brt-element.html">
 <link rel="import" href="../bower_components/core-splitter/core-splitter.html">
 <!-- Define your custom element -->
-<polymer-element name="brt-dashboard-splitter" extends="core-splitter">
+<polymer-element name="brt-dashboard-splitter" on-trackend="{{trackEnd}}" extends="core-splitter">
     <script type="text/javascript">
         Polymer({
             domReady: function() {
@@ -14,7 +15,9 @@
                     if (this.previousElementSibling) {
                         this.previousElementSibling.style.overflow = 'none';
                     };
-                    this.parentNode.style.overflow = 'hidden';
+                    if (this.parentNode) {
+                        this.parentNode.style.overflow = 'hidden';
+                    }
                 }
             },
             directionChanged: function() {
@@ -26,6 +29,7 @@
             update: function() {
                 //this.target = this.isNext ? this.nextElementSibling : this.previousElementSibling;
                 this.dimension = this.horizontal ? 'height' : 'width';
+                this.methodName = this.horizontal ? 'setHeight' : 'setWidth';
                 this.classList.toggle('horizontal', this.horizontal);
             },
 
@@ -36,17 +40,20 @@
                 //var min = this.target.__splitterMinSize = this.horizontal ? 'minHeight' : 'minWidth';
                 //this.target.style[min] = this.minSize;
             },
-
+            trackEnd: function(){
+                this.nextElementSibling && this.nextElementSibling.onSizeUpdate();
+                this.previousElementSibling && this.previousElementSibling.onSizeUpdate();
+            },
             trackStart: function() {
-                this.update();
+                //this.update();
                 if (this.nextElementSibling) {
                     //this.nextElementSibling.setAttribute('flex', 'flex');
-                    this.nextElementSiblingSize = parseInt(getComputedStyle(this.nextElementSibling)[this.dimension]);
+                    this.nextElementSiblingSize = parseInt(this.nextElementSibling.getBoundingClientRect()[this.dimension]);
                     //this.nextElementSibling.removeAttribute('flex');
                 }
                 if (this.previousElementSibling) {
                     //this.previousElementSibling.setAttribute('flex', 'flex');
-                    this.previousElementSiblingSize = parseInt(getComputedStyle(this.previousElementSibling)[this.dimension]);
+                    this.previousElementSiblingSize = parseInt(this.previousElementSibling.getBoundingClientRect()[this.dimension]);
                     //this.previousElementSibling.removeAttribute('flex');
                 }
             },
@@ -56,14 +63,13 @@
                 }
                 var d = e[this.horizontal ? 'dy' : 'dx'];
                 if (this.nextElementSibling) {
-                    this.nextElementSibling.style[this.dimension] = ( this.nextElementSiblingSize - d ) + 'px';
+                    this.nextElementSibling[this.methodName](this.nextElementSiblingSize - d);
                 }
                 if (this.previousElementSibling) {
-                    this.previousElementSibling.style[this.dimension] = ( this.previousElementSiblingSize + d ) + 'px';
+                    this.previousElementSibling[this.methodName](this.previousElementSiblingSize + d);
                 }
-                //this.target.style[this.dimension] = this.size + (this.isNext ? -d : d) + 'px';
                 //this.notifyResize();
-            },
+            }
         });
     </script>
 </polymer-element>
@@ -72,17 +78,17 @@
         <style>
             :host{
                 min-width: 100px;
-                min-height: 100px;
+                min-height: 10px;
                 display: block;
             }
-            #c{
+            #box{
                 border: 2px dashed #dedede;
                 background-color: #eeeeee;
                 box-sizing: border-box;
                 display: block;
             }
         </style>
-        <div id="c"></div>
+        <div id="box"></div>
     </template>
     <script type="text/javascript">
         Polymer({
@@ -95,16 +101,54 @@
 
             highlight: function(part){
                 var box = this.getBoundingClientRect();
-                var cs = this.$.c.style;
+                var cs = this.$.box.style;
+                cs.marginLeft = '0px';
                 switch(part){
                     case 'full':
                         cs.width = box.width+'px';
                         cs.height = box.height+'px';
                     break;
                     case 'left':
-                        cs.width = (box.width /2)+'px';
+                        cs.width = (box.width /3)+'px';
                         cs.height = box.height+'px';
                     break;
+                    case 'right':
+                        cs.marginLeft = (box.width * 2/3)+'px';
+                        cs.width = (box.width /3)+'px';
+                        cs.height = box.height+'px';
+                    break;
+                }
+            }
+        });
+    </script>
+</polymer-element>
+<polymer-element name="brt-dashboard-row">
+    <content></content>
+    <script>
+        Polymer({
+            attached: function(){
+                this.onMutation(this, this.onChildAddRemove);
+            },
+            onChildAddRemove: function() {
+                this.onMutation(this, this.onChildAddRemove);
+                this.removeIfEmpty();
+            },
+            removeIfEmpty: function(){
+                var self = this;
+                if (self.isPhantom) {
+                    return;
+                };
+                if (self.querySelectorAll('brt-dashboard-column').length == 0) {
+                    self.remove();
+                }
+            },
+            onSizeUpdate: function(){
+                var self = this;
+                var columns = self.querySelectorAll('brt-dashboard-column'), len = columns.length, c;
+                for(var i = 0; i < len; i++){
+                    c = columns[i];
+                    c.updateWidth();
+                    c.onSizeUpdate();
                 }
             }
         });
@@ -113,12 +157,8 @@
 <polymer-element name="brt-dashboard-column">
     <content></content>
     <script>
-        Polymer('brt-dashboard-column', {
+        Polymer(Polymer.mixin(BRT.element, {
             splitterTagName: 'BRT-DASHBOARD-SPLITTER',
-            observe: {
-                'this.childNodes.length': 'onChildAddRemove'
-            },
-
             updateWidth: function(){
                 this.style.width = 'auto';
                 this.style.width = this.getBoundingClientRect().width+'px';
@@ -126,12 +166,25 @@
 
             onChildAddRemove: function() {
                 this.onMutation(this, this.onChildAddRemove);
-                this.removeSiblingIfEmpty();
+                this.removeIfEmpty();
             },
 
-            removeSiblingIfEmpty: function(){
+            onSizeUpdate: function(){
                 var self = this;
-                if (self.querySelectorAll('brt-panel').length == 0) {
+                //self.async(function() {
+                    var rows = self.querySelectorAll('brt-dashboard-row'), len = rows.length;
+                    for(var i = 0; i < len; i++){
+                        rows[i].onSizeUpdate();
+                    }
+                //}, 1);
+            },
+
+            removeIfEmpty: function(){
+                var self = this;
+                if (self.parentNode && self.parentNode.isPhantom) {
+                    return;
+                };
+                if (self.querySelectorAll('brt-panel,brt-dashboard-panel-proxy').length == 0) {
                     var siblingColumn = false, siblingSpliter = false;
                     if (self.nextElementSibling && self.nextElementSibling.tagName == this.splitterTagName) {
                         siblingSpliter = self.nextElementSibling;
@@ -165,13 +218,15 @@
             },
 
             attributeChanged: function(name, oldValue, newValue){
-
+                console.log('attributeChanged', name)
             },
 
             // Fires when an instance of the element is created
-            created: function() {},
+            created: function() {
+            },
 
             attached: function(){
+                this.onMutation(this, this.onChildAddRemove);
                 /*this.async(function(){
                     this.updateWidth();
                 }, 10);*/
@@ -179,9 +234,8 @@
 
             // Fires when the element’s initial set of children and siblings are guaranteed to exist
             domReady: function() {
-                this.onMutation(this, this.onChildAddRemove);
             }
-        });
+        }));
     </script>
 </polymer-element>
 
@@ -196,7 +250,8 @@
             }
             ::content brt-dashboard-column{
                 /*display: block;*/
-                overflow: auto !important;
+                overflow-y: auto !important;
+                overflow-x: hidden !important;
             }
             ::content brt-panel, ::content brt-dashboard-panel-proxy{
                 margin: 5px;
@@ -215,9 +270,7 @@
                 width: auto;
             }
         </style>
-        <div id="container" horizontal layout>
-            <content></content>
-        </div>
+        <content></content>
     </template>
     <script>
     (function() {
@@ -256,10 +309,10 @@
 
             onPanelDragStart: function(ce){
                 //console.log('onPanelDragStart', ce.detail)
-                var target = ce.target, column = target.parentNode, createSplitter = false;
+                var target = ce.target, column = target.parentNode, create = false, tmpColumn = false, tmpRow = false;
                 var targetBox = target.getBoundingClientRect();
                 //proxy.style.width = targetBox.width+'px';
-                //proxy.style.height = targetBox.height+'px';
+                proxy.style.height = targetBox.height+'px';
                 column.insertBefore(proxy, target);
                 //this.async(function(){
                     target.style._display = target.style.display;
@@ -268,48 +321,80 @@
 
                 ce.detail.drag = function(dragInfo){
                     var info = this.findPanelByPos({x: dragInfo.event.clientX, y: dragInfo.event.clientY});
+                    create = false;
                     if (info) {
-                        var panel = info.panel, isProxy = info.extra.isProxy, isHorizontal = panel.parentNode.hasAttribute('horizontal');
-                        if (!isProxy) {
-                            if ( (isHorizontal && info.extra.left) || (!isHorizontal && info.extra.top) ) {//create new splitter
-                                panel.parentNode.insertBefore(proxy, panel);
-                            }else{
-                                panel.parentNode.insertBefore(proxy, panel.nextSibling);
-                            }
-                        }else{
-                            if (info.extra.left) {//create new splitter
-                                createSplitter = true;
-                                proxy.highlight('left');
-                            }else{
-                                createSplitter = false;
-                                proxy.highlight('full');
-                            }
+                        var panel = info.panel, intersectWith = info.extra.intersectWith, isHorizontal = panel.parentNode.hasAttribute('horizontal');
+                        switch (intersectWith) {
+                            case 'panel':
+                                if ( (isHorizontal && info.extra.left) || (!isHorizontal && info.extra.top) ) {
+                                    panel.parentNode.insertBefore(proxy, panel);
+                                }else{
+                                    panel.parentNode.insertBefore(proxy, panel.nextSibling);
+                                }
+                            break;
+                            case 'proxy':
+                                if (info.extra.left) {//create new splitter
+                                    create = 'column';
+                                    proxy.highlight('left');
+                                }else if(info.extra.right){
+                                    create = 'subcolumn';
+                                    proxy.highlight('right');
+                                }else{
+                                    proxy.highlight('full');
+                                }
+                            break;
+                            case 'column':
+                                //
+                            break;
+                            case 'dashboard':
+                                if (!tmpColumn) {
+                                    tmpColumn = this.addRootColumn();
+                                    tmpRow = tmpColumn.parentNode;
+                                    tmpRow.isPhantom = true;
+                                }
+                                tmpColumn.appendChild(proxy);
+                            break;
                         }
-                    };
+                    }
                 }.bind(this)
 
                 ce.detail.drop = function(dragInfo){
                     target.style.display = target.style._display;
-                    
-                    if (createSplitter) {
-                        var splitter = document.createElement('brt-dashboard-splitter');
-                        //splitter.setAttribute('direction', 'left');
-                        var newColumn = document.createElement('brt-dashboard-column');
-                        var proxyParent = proxy.parentNode;
-                        var halfWidth   = proxyParent.getBoundingClientRect().width/2;
+                    var proxyParent = proxy.parentNode;
+                    switch (create) {
+                        case 'column':
+                            var splitter = document.createElement('brt-dashboard-splitter');
+                            //splitter.setAttribute('direction', 'left');
+                            var newColumn = document.createElement('brt-dashboard-column');
+                            var halfWidth = proxyParent.getBoundingClientRect().width/2;
 
-                        newColumn.style.width   = halfWidth + 'px';
-                        proxyParent.style.width = halfWidth + 'px';
-                        //newColumn.setAttribute('layout', 'layout');
-                        newColumn.appendChild(target);
-                        proxyParent.parentNode.insertBefore(newColumn, proxyParent);
-                        proxyParent.parentNode.insertBefore(splitter, proxyParent);
-                    }else{
-                        proxy.parentNode.insertBefore(target, proxy);
+                            newColumn.style.width   = halfWidth + 'px';
+                            proxyParent.style.width = halfWidth + 'px';
+                            //newColumn.setAttribute('layout', 'layout');
+                            newColumn.appendChild(target);
+                            proxyParent.parentNode.insertBefore(newColumn, proxyParent);
+                            proxyParent.parentNode.insertBefore(splitter, proxyParent);
+                        break;
+                        case 'subcolumn':
+                            var row         = this.createNewRow();
+                            var newColumn   = this.createNewColumn();
+                            newColumn.appendChild(target);
+                            newColumn.style.width = proxyParent.getBoundingClientRect().width+'px';
+                            row.appendChild(newColumn);
+                            proxyParent.insertBefore(row, proxy);
+                        break;
+                        default:
+                            proxy.parentNode.insertBefore(target, proxy);
+                        break;
                     }
                     
                     proxy.remove();
-                }
+                    if (tmpRow) {
+                        tmpRow.isPhantom = false;
+                        tmpColumn.removeIfEmpty();
+                        tmpRow.removeIfEmpty();
+                    }
+                }.bind(this)
             },
 
             findPanelByPos: function(pos){
@@ -320,18 +405,29 @@
                         return {panel: p, extra: w};
                     }
                 }
+                panels = this.querySelectorAll('brt-dashboard-column'), len = panels.length;
+                for(var i=0; i< len; i++){
+                    p = panels[i];
+                    if(w = this.isPanelIntersect(p, pos, true)){
+                        w.intersectWith = 'column';
+                        return {panel: p, extra: w};
+                    }
+                }
+                if(w = this.isPanelIntersect(this, pos, true)){
+                    w.intersectWith = 'dashboard';
+                    return {panel: p, extra: w};
+                }
                 return false;
             },
 
             isPanelIntersect: function(panel, pos, findExtraInfo){
                 var box = panel.getBoundingClientRect();
                 var x = pos.x, y = pos.y;
-                console.log('box.top', box.top, y)
                 var intersect = (box.left <= x && x <= box.right && box.top <= y && y <= box.bottom)
                 if (!intersect || !findExtraInfo) {
                     return intersect;
                 };
-                var res = {isProxy: panel.isProxy};
+                var res = {intersectWith: panel.isProxy ? 'proxy': 'panel'};
                 var w = box.width/3;
                 var h = box.height/3;
                 var x1 = box.left, x2 = x1+w, x3 = x2 + w;
@@ -364,16 +460,36 @@
             add: function(panel){
                 var columns = this.querySelectorAll('brt-dashboard-column');
                 if (!columns.length) {
-                    var column = document.createElement('brt-dashboard-column');
-                        //column.setAttribute('horizontal', 'horizontal');
-                        //column.setAttribute('layout', 'layout');
-                    column.style.width = this.getBoundingClientRect().width+'px';
-                    this.appendChild(column);
+                    var column = this.addRootColumn();
                 }else{
-                    column = columns[0];
+                    var column = columns[0];
                 }
 
                 column.appendChild(panel)
+            },
+
+            createNewColumn: function(parent){
+                var column = document.createElement('brt-dashboard-column');
+                column.style.width = (parent || this).getBoundingClientRect().width+'px';
+
+                //column.setAttribute('horizontal', 'horizontal');
+                //column.setAttribute('layout', 'layout');
+                return column;
+            },
+
+            createNewRow: function(){
+                var row = document.createElement('brt-dashboard-row');
+                row.setAttribute('horizontal', true);
+                row.setAttribute('layout', true);
+                return row;
+            },
+
+            addRootColumn: function(){
+                var row    = this.createNewRow();
+                var column = this.createNewColumn();
+                row.appendChild(column);
+                this.appendChild(row);
+                return column;
             }
         });
     })();

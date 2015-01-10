@@ -25,57 +25,7 @@
 
 	<!-- Using Custom Elements -->
 	<button onclick="addpanel()">Add Panel</button>
-	<brt-dashboard>
-			<!--<brt-dashboard-column>
-				<brt-panel heading="Panel 3">
-					<brt-ipsum></brt-ipsum>
-				</brt-panel>
-				<brt-panel heading="Panel 3-2">
-					<brt-ipsum></brt-ipsum>
-				</brt-panel>
-			</brt-dashboard-column>
-			<brt-dashboard-splitter direction="left"></brt-dashboard-splitter>
-			<brt-dashboard-column>
-				<brt-panel heading="Panel 3">
-					<brt-ipsum></brt-ipsum>
-				</brt-panel>
-				<brt-panel heading="Panel 3-2">
-					<brt-ipsum></brt-ipsum>
-				</brt-panel>
-			</brt-dashboard-column>
-		 <brt-dashboard-column style="width:30%">
-			<brt-panel heading="Panel 1">
-				<brt-ipsum></brt-ipsum>
-			</brt-panel>
-			<brt-panel heading="Panel 2">
-				<brt-ipsum></brt-ipsum>
-			</brt-panel>
-		</brt-dashboard-column>
-		<brt-dashboard-splitter direction="left"></brt-dashboard-splitter>
-
-		<brt-dashboard-column flex vertical>
-
-			<brt-dashboard-column horizontal layout id="top-right">
-				<brt-panel heading="Panel 3">
-					<brt-ipsum></brt-ipsum>
-				</brt-panel>
-				<brt-panel heading="Panel 3-2">
-					<brt-ipsum></brt-ipsum>
-				</brt-panel>
-			</brt-dashboard-column>
-
-			<brt-dashboard-splitter direction="up"></brt-dashboard-splitter>
-
-			<brt-dashboard-column>
-				<brt-panel heading="Panel 4">
-					<brt-ipsum></brt-ipsum>
-				</brt-panel>
-				<brt-panel heading="Panel 5">
-					<brt-ipsum></brt-ipsum>
-				</brt-panel>
-			</brt-dashboard-column>
-		</brt-dashboard-column>-->
-	</brt-dashboard>
+	<brt-dashboard></brt-dashboard>
 
 	<script type="text/javascript">
 		function createPanel(){
@@ -88,18 +38,6 @@
 			var dashboard = document.querySelector('brt-dashboard');
 			dashboard.add(createPanel())
 		}
-		window.addEventListener('polymer-ready', function(e) {
-			var dashboard		= document.querySelector('brt-dashboard');
-			var topRightColumn 	= document.getElementById('top-right');
-			//topRightColumn.appendChild(createPanel());
-
-			/*c.opened = false;
-			setTimeout(function(){
-			c.opened = true;
-			}, 5000)
-			//xFoo.barProperty = 'baz';
-			*/
-		});
 	</script>
 </body>
 </html>
