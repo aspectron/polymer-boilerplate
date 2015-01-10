@@ -9,7 +9,7 @@
 
 	<!-- Importing Custom Elements -->
 	<link rel="import" href="src/brt-dashboard.html">
-<link rel="import" href="bower_components/brt-ipsum/brt-ipsum.html">
+	<link rel="import" href="bower_components/brt-ipsum/brt-ipsum.html">
 </head>
 <body>
 	<style>
@@ -31,13 +31,22 @@
 		function createPanel(){
 			var c		= document.createElement('brt-panel');
 			c.heading	= "Panel " + (new Date()).getTime();
+			/*c.setAttribute('closeable', false);
+			setTimeout(function(){
+				c.setAttribute('closeable', true);
+			}, 1000)*/
 			c.innerHTML	= '<brt-ipsum></brt-ipsum>';
+			c.menuitems = [{key: 'menu-1', value:'Menu 1'}, {key: 'menu-2', value:'Menu 2'}]
 			return c;
 		}
 		function addpanel(){
 			var dashboard = document.querySelector('brt-dashboard');
 			dashboard.add(createPanel())
 		}
+
+		window.addEventListener('polymer-ready', function(e) {
+			//alert('polymer-ready')
+		});
 	</script>
 </body>
 </html>

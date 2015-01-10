@@ -9,6 +9,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 <link rel="import" href="../polymer/polymer.html">
 <link rel="import" href="../core-collapse/core-collapse.html">
+<link rel="import" href="../core-icon-button/core-icon-button.html">
+<link rel="import" href="../core-toolbar/core-toolbar.html">
+<link rel="import" href="../core-menu-button/core-menu-button.html">
+<link rel="import" href="../core-menu/core-menu.html">
+<link rel="import" href="../core-item/core-item.html">
+<link rel="import" href="../core-dropdown/core-dropdown.html">
+<link rel="import" href="../core-dropdown-menu/core-dropdown-menu.html">
+
 
 <style>
   brt-panel-proxy {
@@ -23,27 +31,78 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   brt-panel-proxy brt-panel::shadow #content{
     border-width: 0px;
   }
+
+  html /deep/ .floatingmenu core-menu core-item{
+    min-height: 30px;
+  }
+  html /deep/ .floatingmenu {
+    background-color: #eee;
+    /* color: #000; */
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    width: auto !important;
+  }
 </style>
 
 <!--
 @group BRT Core Elements
 @element brt-panel
 @homepage github.io
--->
 
-<polymer-element name="brt-panel">
+<polymer-element name="brt-menu-dropdown" attributes="items" extends="core-dropdown" noscript>
+  <template>
+    <core-menu>
+      <template repeat="{{items}}">
+        <core-item>{{}}</core-item>
+      </template>
+    </core-menu>
+  </template>
+</polymer-element>
+<polymer-element name="brt-menu-button" attributes="items" extends="core-menu-button">
+  <script>
+    Polymer('brt-menu-button', {
+      get dropdown() {
+        if (!this._dropdown) {
+          this._dropdown = this.buildDropDown();
+          for (var l in this.overlayListeners) {
+            this.addElementListener(this._dropdown, l, this.overlayListeners[l]);
+          }
+        }
+        return this._dropdown;
+      },
+      buildDropDown: function() {
+        var dropdown = this.querySelector('.dropdown');
+        if (dropdown) {
+          return dropdown;
+        };
+        dropdown = document.createElement('brt-menu-dropdown');
+        dropdown.classList.add('dropdown', 'colored');
+        document.body.appendChild(dropdown);
+        return dropdown;
+      },
+      attached: function(){
+        this.super();
+        console.log('itemsChanged', this.items)
+      },
+      itemsChanged: function(){
+        console.log('itemsChanged', this.items)
+        this.dropdown.items = this.items;
+      }
+    });
+  </script>
+</polymer-element>-->
+<polymer-element name="brt-panel" refreshable menuitems="" attributes="closeable refreshable menuItems">
   <template>
     <style>
       :host{
         display: block;
       }
       #header {
-        padding: 10px 15px;
         background-color: #f3f3f3;
         border: 1px solid #dedede;
         border-top-left-radius: 5px;
         border-top-right-radius: 5px;
-        font-size: 18px;
+        font-size: 15px;
         cursor: move;
         display: block;
         -webkit-user-select: none;
@@ -62,8 +121,37 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         border-bottom-left-radius: 5px;
         border-bottom-right-radius: 5px;
       }
+      core-toolbar, core-toolbar::shadow .toolbar-tools{
+        height: 20px;
+      }
+      core-icon-button{
+        padding: 0px 5px;
+        margin: 0px 2px !important;
+      }
+      core-icon-button::shadow core-icon{
+        width: 12px;
+        height: 12px;
+        padding: 4px;
+      }
     </style>
-    <div on-click="{{onHeaderClick}}" id="header">{{heading}}</div>
+    <core-toolbar id="header">
+      <template if="{{menuitems}}">
+        <core-menu-button>
+          <core-icon-button icon="menu" id="menuBtn"></core-icon-button>
+            <core-dropdown layered class="dropdown floatingmenu">
+              <core-menu valueattr="key" on-core-activate="{{onMenuSelection}}">
+                <template repeat="{{item in menuitems}}">
+                  <core-item key="{{item.key}}">{{item.value}}</core-item>
+                </template>
+              </core-menu>
+            </core-dropdown>
+        </core-menu-button>
+      </template>
+      <span flex on-click="{{onHeaderClick}}">{{heading}}</span>
+      <core-icon-button icon="refresh" id="refreshBtn"></core-icon-button>
+      <core-icon-button icon="arrow-drop-up" id="toggleBtn" on-click="{{onToggleClick}}"></core-icon-button>
+      <core-icon-button icon="close" id="closeBtn" on-click="{{onCloseClick}}"></core-icon-button>
+    </core-toolbar>
     <core-collapse id="content" {{opened}}>
         <content></content>
     </core-collapse>
@@ -71,7 +159,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <script>
 (function() {
   var proxy;
-
+  
   Polymer('brt-panel', {
     opened: false,
     publish: {
@@ -81,9 +169,32 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     observe: {
       'x y': 'coordinatesChanged'
     },
+    refreshableChanged: function(){
+      if (!this.refreshable || this.refreshable == 'false') {
+        this.$.refreshBtn.style.display = 'none'
+      }else{
+        this.$.refreshBtn.style.display = 'block'
+      }
+    },
+    closeableChanged: function(){
+      if (!this.closeable || this.closeable == 'false') {
+        this.$.closeBtn.style.display = 'none'
+      }else{
+        this.$.closeBtn.style.display = 'block'
+      }
+    },
 
-    onHeaderClick: function(){
+    onToggleClick: function(){
       this.$.content.toggle();
+      this.$.toggleBtn.icon = this.$.toggleBtn.icon == 'arrow-drop-up' ? 'arrow-drop-down' : 'arrow-drop-up';
+    },
+
+    onCloseClick: function(){
+      this.remove();
+    },
+
+    onMenuSelection: function(e, item, menu){
+      console.log('onMenuSelection', menu.selected)
     },
 
     ready: function() {

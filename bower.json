@@ -21,6 +21,9 @@
     "core-header-panel": "Polymer/core-header-panel#~0.5.2",
     "core-collapse": "Polymer/core-collapse#~0.5.2",
     "paper-button": "Polymer/paper-button#~0.5.2",
-    "paper-dialog": "Polymer/paper-dialog#~0.5.2"
+    "paper-dialog": "Polymer/paper-dialog#~0.5.2",
+    "core-toolbar": "Polymer/core-toolbar#~0.5.2",
+    "core-menu-button": "Polymer/core-menu-button#~0.5.2",
+    "core-dropdown-menu": "Polymer/core-dropdown-menu#~0.5.2"
   }
 }
