@@ -15,6 +15,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../core-menu/core-menu.html">
 <link rel="import" href="../core-item/core-item.html">
 <link rel="import" href="../core-dropdown/core-dropdown.html">
+<link rel="import" href="../brt-element/brt-element.html">
 <link rel="import" href="../core-dropdown-menu/core-dropdown-menu.html">
 
 
@@ -119,6 +120,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         padding: 15px;
         border: 1px solid #dedede;
         border-top: none;
+        overflow-y: auto !important;
+        box-sizing: border-box;
       }
 
       core-toolbar, core-toolbar::shadow .toolbar-tools{
@@ -152,7 +155,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       <core-icon-button icon="arrow-drop-up" id="toggleBtn" on-click="{{onToggleClick}}"></core-icon-button>
       <core-icon-button icon="close" id="closeBtn" on-click="{{onCloseClick}}"></core-icon-button>
     </core-toolbar>
-    <core-collapse id="content" {{opened}}>
+    <core-collapse id="content" {{opened}} fixedSize>
         <content></content>
     </core-collapse>
   </template>
@@ -160,10 +163,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 (function() {
   var proxy;
   
-  Polymer('brt-panel', {
+  Polymer(Polymer.mixin({
     opened: false,
     publish: {
       heading: ''
+    },
+
+    onStyleUpdate: function(name, value, val){
+      if (name == 'height') {
+        if (!this.headerHeight) {
+          this.headerHeight = this.$.header.getBoundingClientRect().height;
+        };
+        this.$.content.style.height = (val - this.headerHeight)+'px';
+      }
     },
 
     observe: {
@@ -301,7 +313,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       //dragInfo.drop = drop;
     }
 
-  });
+  }, BRT.element));
 
 
 })();

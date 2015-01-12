@@ -157,7 +157,7 @@
 <polymer-element name="brt-dashboard-column">
     <content></content>
     <script>
-        Polymer(Polymer.mixin(BRT.element, {
+        Polymer(Polymer.mixin({
             splitterTagName: 'BRT-DASHBOARD-SPLITTER',
             updateWidth: function(){
                 this.style.width = 'auto';
@@ -235,7 +235,7 @@
             // Fires when the element’s initial set of children and siblings are guaranteed to exist
             domReady: function() {
             }
-        }));
+        }, BRT.element));
     </script>
 </polymer-element>
 <polymer-element name="brt-dashboard">
@@ -310,8 +310,10 @@
                 //console.log('onPanelDragStart', ce.detail)
                 var target = ce.target, column = target.parentNode, create = false, tmpColumn = false, tmpRow = false;
                 var targetBox = target.getBoundingClientRect();
+
                 //proxy.style.width = targetBox.width+'px';
-                proxy.style.height = targetBox.height+'px';
+                proxy.style.height      = targetBox.height+'px';
+                target.setHeight(targetBox.height);
                 column.insertBefore(proxy, target);
                 //this.async(function(){
                     target.style._display = target.style.display;
@@ -325,6 +327,21 @@
                         var panel = info.panel, intersectWith = info.extra.intersectWith, isHorizontal = panel.parentNode.hasAttribute('horizontal');
                         switch (intersectWith) {
                             case 'panel':
+                                console.log(isHorizontal +":"+ info.extra.left)
+                                var parent = panel.parentNode;
+                                if (info.extra.left) {
+                                    var splitter    = document.createElement('brt-dashboard-splitter');
+                                    var newColumn   = document.createElement('brt-dashboard-column');
+                                    var halfWidth   = parent.getBoundingClientRect().width/2;
+
+                                    newColumn.style.width   = halfWidth + 'px';
+                                    parent.style.width      = halfWidth + 'px';
+                                    //newColumn.setAttribute('layout', 'layout');
+                                    newColumn.appendChild(proxy);
+                                    parent.parentNode.insertBefore(newColumn, parent);
+                                    parent.parentNode.insertBefore(splitter, parent);
+                                    return;
+                                };
                                 if ( (isHorizontal && info.extra.left) || (!isHorizontal && info.extra.top) ) {
                                     panel.parentNode.insertBefore(proxy, panel);
                                 }else{
@@ -334,7 +351,7 @@
                             case 'proxy':
                                 if (info.extra.left) {//create new splitter
                                     create = 'column';
-                                    proxy.highlight('left');
+                                    proxy.highlight('left');    
                                 }else if(info.extra.right){
                                     create = 'subcolumn';
                                     proxy.highlight('right');

@@ -10,11 +10,11 @@
 
 		setStyle: function(name, value){
 			this.style[name] = value;
-			this.onStyleUpdate(name, value);
-		},
-
-		onStyleUpdate: function(name, value){
-
+			var val = value;
+			if (value.substr(-2) == 'px') {
+				val = value.substr(0, value.length-2);
+			};
+			this.onStyleUpdate && this.onStyleUpdate(name, value, val);
 		}
 	}
 </script>
