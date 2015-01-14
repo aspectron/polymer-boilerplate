@@ -18,6 +18,111 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../brt-element/brt-element.html">
 <link rel="import" href="../core-dropdown-menu/core-dropdown-menu.html">
 
+<polymer-element
+  name="panel-resizer"
+  attributes="direction locked minSize"
+  on-trackstart="{{trackStart}}"
+  on-track="{{track}}"
+  on-down="{{preventSelection}}"
+>
+
+<template>
+  <style type="text/css">
+    :host{
+      height: 5px;
+      width: 100%;
+      display: block;
+      cursor: row-resize;
+    };
+  </style>
+</template>
+<script>
+
+  Polymer(Polymer.mixin({
+
+    /**
+     * Possible values are  `up` and `down`.
+     *
+     * @attribute direction
+     * @type string
+     * @default 'down'
+     */
+    direction: 'down',
+
+    /**
+     * Minimum width to which the splitter target can be sized, e.g.
+     * `minSize="100px"`
+     *
+     * @attribute minSize
+     * @type string
+     * @default ''
+     */
+    minSize: '',
+
+    /**
+     * Locks the split bar so it can't be dragged.
+     *
+     * @attribute locked
+     * @type boolean
+     * @default false
+     */
+    locked: false,
+
+    // Listen for resize requests on parent, since splitter is peer to resizables
+    resizerIsPeer: true,
+
+    dimension: 'height',
+
+    ready: function() {
+      this.directionChanged();
+    },
+
+    attached: function() {
+      this.resizerAttachedHandler();
+    },
+
+    detached: function() {
+      this.resizerDetachedHandler();
+    },
+
+    domReady: function() {
+    },
+
+    directionChanged: function() {
+      this.update();
+    },
+
+    update: function() {
+      this.target = this.direction == 'down' ? this.previousElementSibling : this.nextElementSibling;
+      this.horizontal = this.direction == 'down' || this.direction == 'up';
+    },
+
+    targetChanged: function(old) {
+      //this.target.style[min] = this.minSize;
+    },
+
+    trackStart: function() {
+      this.update();
+      this.size = parseInt(getComputedStyle(this.target)[this.dimension]);
+    },
+
+    track: function(e) {
+      if (this.locked) {
+        return;
+      }
+      var d = e[this.horizontal ? 'dy' : 'dx'];
+      this.target.style[this.dimension] = this.size + (this.isNext ? -d : d) + 'px';
+      this.notifyResize();
+    },
+
+    preventSelection: function(e) {
+      e.preventDefault();
+    }
+
+  }, Polymer.CoreResizer));
+
+</script>
+</polymer-element>
 
 <style>
   brt-panel-proxy {
@@ -158,6 +263,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <core-collapse id="content" {{opened}} fixedSize>
         <content></content>
     </core-collapse>
+    <panel-resizer class="bottom-resizer"></panel-resizer>
   </template>
 <script>
 (function() {
