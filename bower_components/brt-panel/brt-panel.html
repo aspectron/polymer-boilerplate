@@ -59,6 +59,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
      */
     minSize: '',
 
+    snapSize: 10,
+
     /**
      * Locks the split bar so it can't be dragged.
      *
@@ -111,7 +113,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         return;
       }
       var d = e[this.horizontal ? 'dy' : 'dx'];
-      this.target.style[this.dimension] = this.size + (this.isNext ? -d : d) + 'px';
+      var size = (this.size + (this.isNext ? -d : d));
+      if (this.snapSize) {
+          size = parseInt(size / this.snapSize) * this.snapSize;
+      }
+
+      this.target.style[this.dimension] = size + 'px';
       this.notifyResize();
     },
 
