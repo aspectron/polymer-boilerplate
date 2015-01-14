@@ -273,7 +273,7 @@
     </template>
     <script>
     (function() {
-        var proxy;
+        var proxy, proxyHolder;
         function getStyle(elem,prop){
             if (elem.currentStyle) {
                 var res= elem.currentStyle.margin;
@@ -291,6 +291,9 @@
             created: function() {
                 if (!proxy) {
                     proxy = document.createElement('brt-dashboard-panel-proxy');
+                    proxyHolder = document.createElement('div');
+                    proxyHolder.style.display = 'none';
+                    document.body.appendChild(proxyHolder)
                 };
             },
 
@@ -316,8 +319,8 @@
                 target.setHeight(targetBox.height);
                 column.insertBefore(proxy, target);
                 //this.async(function(){
-                    target.style._display = target.style.display;
-                    target.style.display = 'none';
+                    target.remove();
+                    proxyHolder.appendChild(target);
                 //}, null, 10);
 
                 ce.detail.drag = function(dragInfo){
@@ -327,7 +330,6 @@
                         var panel = info.panel, intersectWith = info.extra.intersectWith, isHorizontal = panel.parentNode.hasAttribute('horizontal');
                         switch (intersectWith) {
                             case 'panel':
-                                console.log(isHorizontal +":"+ info.extra.left)
                                 var parent = panel.parentNode;
                                 if (info.extra.left) {
                                     var splitter    = document.createElement('brt-dashboard-splitter');
@@ -342,13 +344,13 @@
                                     parent.parentNode.insertBefore(splitter, parent);
                                     return;
                                 };
-                                if ( (isHorizontal && info.extra.left) || (!isHorizontal && info.extra.top) ) {
+                                if ( info.extra.top ) {
                                     panel.parentNode.insertBefore(proxy, panel);
                                 }else{
                                     panel.parentNode.insertBefore(proxy, panel.nextSibling);
                                 }
                             break;
-                            case 'proxy':
+                            /*case 'proxy':
                                 if (info.extra.left) {//create new splitter
                                     create = 'column';
                                     proxy.highlight('left');    
@@ -361,11 +363,11 @@
                             break;
                             case 'column':
                                 //
-                            break;
+                            break;*/
                             case 'dashboard':
                                 if (!tmpColumn) {
-                                    tmpColumn = this.addRootColumn();
-                                    tmpRow = tmpColumn.parentNode;
+                                    tmpColumn   = this.addRootColumn();
+                                    tmpRow      = tmpColumn.parentNode;
                                     tmpRow.isPhantom = true;
                                 }
                                 tmpColumn.appendChild(proxy);
@@ -375,7 +377,6 @@
                 }.bind(this)
 
                 ce.detail.drop = function(dragInfo){
-                    target.style.display = target.style._display;
                     var proxyParent = proxy.parentNode;
                     switch (create) {
                         case 'column':

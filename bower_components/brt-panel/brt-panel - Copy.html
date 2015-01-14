@@ -20,16 +20,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 
 <style>
-  brt-panel-proxy {
+  brt-panel-ghost {
     position: fixed;
-    left: 0;
-    top: 0;
     display: block;
     pointer-events: none;
-    border-radius: 5px;
+  }
+  brt-panel-ghost brt-panel{
+    margin: 0px;
+    background-color: rgba(0, 0, 0, 0.2);
+    position: fixed;
   }
 
-  brt-panel-proxy brt-panel::shadow #content{
+  brt-panel-ghost brt-panel::shadow #content{
     border-width: 0px;
   }
 
@@ -97,6 +99,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <style>
       :host{
         display: block;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
       }
 
       #header {
@@ -161,16 +167,82 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   </template>
 <script>
 (function() {
-  var proxy;
+  var ghost, ghostOuter, dragInfo = false;
+
+  var ddHelper = {
+
+    setTarget: function(panel){
+      if (this.dragging || (dragInfo && dragInfo.target == panel) ) {
+        return;
+      };
+      dragInfo = {
+        ghost: ghost
+      };
+      console.log('setTarget')
+      dragInfo.target = panel;
+      var box = panel.getBoundingClientRect();//dragInfo.event.target.getBoundingClientRect();
+      dragInfo.ghost.style.cssText = ';width: '+box.width+'px; height: '+box.height+'px; left:0px; top:0px;';
+      ghost.style.transform = ghost.style.webkitTransform = 'translate(' + box.left + 'px, ' + box.top + 'px)';
+      dragInfo.ghost.heading = panel.heading;
+    },
+
+    coordinatesChanged : function () {
+      if (!dragInfo) {
+        return;
+      };
+      var offset = dragInfo.offset, x = dragInfo.p.x + offset.x, y = dragInfo.p.y + offset.y;
+      ghost.style.transform = ghost.style.webkitTransform = 'translate(' + x + 'px, ' + y + 'px)';
+
+    },
+
+    trackStart: function(event) {
+      //ghost.style.cssText = '';
+      if (!dragInfo) {
+        return
+      };
+      ghost.style.display = 'block';
+      dragInfo.event  = event;
+      var box         = ghost.getBoundingClientRect();
+      dragInfo.drag   = function() {};
+      dragInfo.offset = {
+        x: box.left - dragInfo.event.pageX,
+        y: box.top - dragInfo.event.pageY
+      }
+      // flaw #1: what if user doesn't need `drag()`?
+      this.dragging = Boolean(dragInfo.drag);
+    },
+
+    track: function(event) {
+      if (this.dragging) {
+        dragInfo.event = event;
+        dragInfo.p = {x : dragInfo.event.pageX, y: dragInfo.event.pageY};
+        dragInfo.drag(dragInfo);
+        this.coordinatesChanged();
+      }
+    },
+
+    trackEnd: function(event) {
+      if (this.dragging) {
+        this.dragging = false;
+        if (dragInfo.drop) {
+          //dragInfo.framed = this.framed(event.relatedTarget);
+          dragInfo.event = event;
+          dragInfo.drop(this.dragInfo);
+        }
+      }
+      dragInfo = null;
+    }/*,
+
+    framed: function(node) {
+      var local = node.getBoundingClientRect();
+      return {x: this.x - local.left, y: this.y - local.top};
+    }*/
+  };
   
   Polymer(Polymer.mixin({
     opened: false,
     publish: {
       heading: ''
-    },
-
-    observe: {
-      'x y': 'coordinatesChanged'
     },
 
     onStyleUpdate: function(name, value, val){
@@ -190,6 +262,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         this.$.refreshBtn.style.display = 'block'
       }
     },
+
     closeableChanged: function(){
       if (!this.closeable || this.closeable == 'false') {
         this.$.closeBtn.style.display = 'none'
@@ -212,107 +285,58 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     },
 
     ready: function() {
-      if (!proxy) {
-        proxy = document.createElement('brt-panel-proxy');
-        var p = document.createElement('brt-panel');
-        proxy.appendChild(p);
-        document.body.appendChild(proxy);
+      if (!ghostOuter) {
+        ghostOuter    = document.createElement('brt-panel-ghost');
+        ghost         = document.createElement('brt-panel');
+        ghost.isGhost = true;
+        ghostOuter.appendChild(ghost);
+        document.body.appendChild(ghostOuter);
+        var listen = function(event, handler) {
+          Polymer.addEventListener(ghost, event, ddHelper[handler].bind(ddHelper));
+        }.bind(this);
+
+        listen('trackstart', 'trackStart');
+        listen('track', 'track');
+        listen('trackend', 'trackEnd');
       }
-      this.proxy = proxy;
       this.opened = true;
       this.dragging = false;
     },
 
     draggingChanged: function() {
-      this.proxy.style.display = this.dragging ? '' : 'none';
+      //ghost.style.display = this.dragging ? '' : 'none';
     },
 
     openedChanged: function() {
       this.$.content.opened = this.opened;
     },
 
-    coordinatesChanged: function() {
-      if (!this.dragInfo) {
-        return;
-      };
-      var offset = this.dragInfo.offset, x = this.x + offset.x, y = this.y + offset.y;
-      this.proxy.style.transform = 
-        this.proxy.style.webkitTransform = 
-          'translate(' + x + 'px, ' + y + 'px)';
-    },
-
     domReady: function(){
       var listen = function(event, handler) {
         Polymer.addEventListener(this.$.header, event, this[handler].bind(this));
       }.bind(this);
-      //
-      listen('trackstart', 'trackStart');
-      listen('track', 'track');
-      listen('trackend', 'trackEnd');
+
+      if (!this.isGhost) {
+        listen('mouseover', 'mouseOver');
+      };
+      //listen('trackstart', 'trackStart');
+      //listen('trackend', 'trackEnd');
+    },
+
+    trackStart: function(){
+
     },
 
     attached: function() {
-      //
-      var host = this;//.parentNode.host || this.parentNode;
-      host.style.cssText += '; user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none;';
+      //this.style.cssText += '; user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none;';
     },
 
     detached: function(){
       this.$.content.isTargetReady = false;
     },
 
-    trackStart: function(event) {
-      this.proxy.style.cssText = '';
-      this.dragInfo = {
-        event: event,
-        proxy: this.proxy
-      };
-      this.onDragStart(this.dragInfo);
-      this.fire('drag-start', this.dragInfo);
-      // flaw #1: what if user doesn't need `drag()`?
-      this.dragging = Boolean(this.dragInfo.drag);
-    },
-
-    track: function(event) {
-      if (this.dragging) {
-        this.x = event.pageX;
-        this.y = event.pageY;
-        this.dragInfo.event = event;
-        this.dragInfo.p = {x : this.x, y: this.y};
-        this.dragInfo.drag(this.dragInfo);
-        //this.coordinatesChanged();
-      }
-    },
-
-    trackEnd: function(event) {
-     
-      if (this.dragging) {
-        this.dragging = false;
-        if (this.dragInfo.drop) {
-          this.dragInfo.framed = this.framed(event.relatedTarget);
-          this.dragInfo.event = event;
-          this.dragInfo.drop(this.dragInfo);
-        }
-      }
-      this.dragInfo = null;
-    },
-
-    framed: function(node) {
-      var local = node.getBoundingClientRect();
-      return {x: this.x - local.left, y: this.y - local.top};
-    },
-
-    onDragStart: function(dragInfo) {
-      //var color = dragInfo.event.target.style.backgroundColor;
-      var box = this.getBoundingClientRect();//dragInfo.event.target.getBoundingClientRect();
-      dragInfo.proxy.style.cssText = 'width: '+box.width+'px; height: '+box.height+'px; background-color: rgba(0,0,0, 0.2);';
-      dragInfo.proxy.childNodes[0].heading = this.heading;
-      dragInfo.drag = function() {};
-      dragInfo.offset = {
-        x: box.left - dragInfo.event.pageX,
-        y: box.top - dragInfo.event.pageY
-      }
-      //dragInfo.drop = drop;
+    mouseOver: function(){
+      ddHelper.setTarget(this);
     }
 
   }, BRT.element));
