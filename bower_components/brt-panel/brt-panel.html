@@ -161,49 +161,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 @group BRT Core Elements
 @element brt-panel
 @homepage github.io
-
-<polymer-element name="brt-menu-dropdown" attributes="items" extends="core-dropdown" noscript>
-  <template>
-    <core-menu>
-      <template repeat="{{items}}">
-        <core-item>{{}}</core-item>
-      </template>
-    </core-menu>
-  </template>
-</polymer-element>
-<polymer-element name="brt-menu-button" attributes="items" extends="core-menu-button">
-  <script>
-    Polymer('brt-menu-button', {
-      get dropdown() {
-        if (!this._dropdown) {
-          this._dropdown = this.buildDropDown();
-          for (var l in this.overlayListeners) {
-            this.addElementListener(this._dropdown, l, this.overlayListeners[l]);
-          }
-        }
-        return this._dropdown;
-      },
-      buildDropDown: function() {
-        var dropdown = this.querySelector('.dropdown');
-        if (dropdown) {
-          return dropdown;
-        };
-        dropdown = document.createElement('brt-menu-dropdown');
-        dropdown.classList.add('dropdown', 'colored');
-        document.body.appendChild(dropdown);
-        return dropdown;
-      },
-      attached: function(){
-        this.super();
-        console.log('itemsChanged', this.items)
-      },
-      itemsChanged: function(){
-        console.log('itemsChanged', this.items)
-        this.dropdown.items = this.items;
-      }
-    });
-  </script>
-</polymer-element>-->
+-->
 <polymer-element name="brt-panel" refreshable menuitems="" attributes="closeable refreshable menuItems">
   <template>
     <style>
@@ -270,7 +228,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <core-collapse id="content" {{opened}} fixedSize>
         <content></content>
     </core-collapse>
-    <panel-resizer class="bottom-resizer"></panel-resizer>
+    <panel-resizer id="resizerBottom" class="bottom-resizer"></panel-resizer>
   </template>
 <script>
 (function() {
@@ -278,6 +236,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   
   Polymer(Polymer.mixin({
     opened: false,
+
+    height: 100,
     publish: {
       heading: ''
     },
@@ -288,12 +248,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     onStyleUpdate: function(name, value, val){
       if (name == 'height') {
-        if (!this.headerHeight) {
-          this.headerHeight = this.$.header.getBoundingClientRect().height;
-        };
-        this.$.content.style.height = (val - this.headerHeight)+'px';
+        this.$.content.horizontalChanged();
+        this.$.content.updateSize( (val - this.getHeaderHeight() - 5)+'px', null, true);
         this.style.height = 'auto';
       }
+    },
+
+    getHeaderHeight: function(){
+      if (!this.headerHeight) {
+        this.headerHeight = this.$.header.getBoundingClientRect().height;
+      };
+      return this.headerHeight;
     },
 
     refreshableChanged: function(){
@@ -303,6 +268,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         this.$.refreshBtn.style.display = 'block'
       }
     },
+
     closeableChanged: function(){
       if (!this.closeable || this.closeable == 'false') {
         this.$.closeBtn.style.display = 'none'
@@ -312,7 +278,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     },
 
     onToggleClick: function(){
-      this.$.content.toggle();
+      this.opened = !this.opened;
       this.$.toggleBtn.icon = this.$.toggleBtn.icon == 'arrow-drop-up' ? 'arrow-drop-down' : 'arrow-drop-up';
     },
 
@@ -341,6 +307,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     },
 
     openedChanged: function() {
+      this.$.resizerBottom.style.display = this.opened? 'block':'none';
       this.$.content.opened = this.opened;
     },
 
@@ -349,9 +316,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         return;
       };
       var offset = this.dragInfo.offset, x = this.x + offset.x, y = this.y + offset.y;
-      this.proxy.style.transform = 
-        this.proxy.style.webkitTransform = 
-          'translate(' + x + 'px, ' + y + 'px)';
+      this.proxy.style.transform = this.proxy.style.webkitTransform = 'translate(' + x + 'px, ' + y + 'px)';
     },
 
     domReady: function(){
@@ -362,16 +327,30 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       listen('trackstart', 'trackStart');
       listen('track', 'track');
       listen('trackend', 'trackEnd');
+      this.openedChanged();
     },
 
     attached: function() {
       //
       var host = this;//.parentNode.host || this.parentNode;
       host.style.cssText += '; user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none;';
+      this.setHeight(this.height);
+      /*this.async(function(){
+        if (!this.$.content.style.height) {
+          this.setHeight(this.height);
+        };
+      }, null, this.$.content.duration * 1000);*/
     },
 
     detached: function(){
       this.$.content.isTargetReady = false;
+      /*var off = function(event, handler) {
+        Polymer.removeEventListener(this.$.header, event, this[handler].bind(this));
+      }.bind(this);
+      //
+      off('trackstart', 'trackStart');
+      off('track', 'track');
+      off('trackend', 'trackEnd');*/
     },
 
     trackStart: function(event) {
@@ -426,6 +405,32 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         y: box.top - dragInfo.event.pageY
       }
       //dragInfo.drop = drop;
+    },
+
+    exportConfig: function(){
+      var height = this.opened? this.getBoundingClientRect().height : parseInt(this.$.content.size.replace('px', '')) + this.getHeaderHeight() + 5;
+      return {
+        tagName: this.tagName,
+        refreshable: !!this.refreshable,
+        menuitems: this.menuitems? this.menuitems: "",
+        opened: this.opened,
+        height: height,
+        heading: this.heading
+      };
+    },
+
+    importConfig: function(config){
+      var keys = ['refreshable', 'menuitems', 'height', 'opened', 'heading'], k;
+      for (var i = keys.length - 1; i >= 0; i--) {
+          k = keys[i];
+          if (config[k] != undefined) {
+            if (k == 'height11') {
+              config[k] && this.setHeight(config[k]);
+            }else{
+              this[k] = config[k];
+            }
+          };
+      }
     }
 
   }, BRT.element));

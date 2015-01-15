@@ -1,5 +1,13 @@
 <script>
-	var BRT = {};
+	var BRT = {
+		createElement: function(config, tagName){
+			var el = document.createElement(config.tagName || tagName || 'div');
+			if (el.importConfig) {
+				el.importConfig(config);
+			};
+			return el;
+		}
+	};
 	BRT.element = {
 		setWidth: function(value){
 			this.setStyle('width', value+'px');
@@ -15,6 +23,15 @@
 				val = value.substr(0, value.length-2);
 			};
 			this.onStyleUpdate && this.onStyleUpdate(name, value, val);
+		},
+
+		destroy: function(){
+			var items = this.childNodes, len = items.length;
+			for (var i = len - 1; i >= 0; i--) {
+				items[i].destroy && items[i].destroy();
+			}
+			this.remove();
+			this.fire('destroy', this);
 		}
 	}
 </script>

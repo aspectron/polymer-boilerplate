@@ -125,7 +125,7 @@
 <polymer-element name="brt-dashboard-row">
     <content></content>
     <script>
-        Polymer({
+        Polymer(Polymer.mixin({
             attached: function(){
                 this.onMutation(this, this.onChildAddRemove);
             },
@@ -150,8 +150,36 @@
                     c.updateWidth();
                     c.onSizeUpdate();
                 }
+            },
+            exportConfig: function(){
+                var columns = this.querySelectorAll('brt-dashboard-column'), len = columns.length, data = {tagName: this.tagName, items:[]};
+                for (var i = len - 1; i >= 0; i--) {
+                   data.horizontal  = this.getAttribute('horizontal');
+                   data.layout      = this.getAttribute('layout');
+                   data.items.unshift(columns[i].exportConfig());
+                };
+                return data;
+            },
+            importConfig: function(config){
+                if (config.horizontal != undefined) {
+                    this.setAttribute('horizontal', config.horizontal);
+                };
+
+                if (config.layout != undefined) {
+                     this.setAttribute('layout', config.layout);
+                };
+
+                if (config.items) {
+                    var len = config.items.length;
+                    for (var i = 0; i < len; i++) {
+                        if (i > 0) {
+                            this.appendChild(BRT.createElement( {tagName: 'brt-dashboard-splitter'} ))
+                        };
+                        this.appendChild(BRT.createElement(config.items[i]))
+                    };
+                };
             }
-        });
+        }, BRT.element));
     </script>
 </polymer-element>
 <polymer-element name="brt-dashboard-column">
@@ -160,8 +188,10 @@
         Polymer(Polymer.mixin({
             splitterTagName: 'BRT-DASHBOARD-SPLITTER',
             updateWidth: function(){
+                this.style.flex = this.style.webkitFlex = this.style.mozFlex = this.style.msFlex = this.style.oFlex = 1;
                 this.style.width = 'auto';
                 this.style.width = this.getBoundingClientRect().width+'px';
+                this.style.flex = this.style.webkitFlex = this.style.mozFlex = '';
             },
 
             onChildAddRemove: function() {
@@ -234,6 +264,27 @@
 
             // Fires when the element’s initial set of children and siblings are guaranteed to exist
             domReady: function() {
+            },
+
+            exportConfig: function(){
+                var items = this.querySelectorAll('brt-panel'), len = items.length, data = {tagName: this.tagName, items:[]};
+                for (var i = len - 1; i >= 0; i--) {
+                   data.style       = {width: this.getBoundingClientRect().width};
+                   data.items.unshift(items[i].exportConfig());
+                };
+                return data;
+            },
+            importConfig: function(config){
+                if (config.style && config.style.width) {
+                    this.setWidth(config.style.width);
+                };
+
+                if (config.items) {
+                    var len = config.items.length;
+                    for (var i = 0; i < len; i++) {
+                       this.appendChild(BRT.createElement(config.items[i]))
+                    };
+                };
             }
         }, BRT.element));
     </script>
@@ -286,7 +337,7 @@
             }
             return res;
         }
-        Polymer('brt-dashboard', {
+        Polymer(Polymer.mixin({
             // Fires when an instance of the element is created
             created: function() {
                 if (!proxy) {
@@ -316,7 +367,7 @@
 
                 //proxy.style.width = targetBox.width+'px';
                 proxy.style.height      = targetBox.height+'px';
-                target.setHeight(targetBox.height);
+                target.height           = targetBox.height;
                 column.insertBefore(proxy, target);
                 //this.async(function(){
                     target.remove();
@@ -507,8 +558,32 @@
                 row.appendChild(column);
                 this.appendChild(row);
                 return column;
+            },
+
+            exportConfig: function(){
+                var rows = this.querySelectorAll('brt-dashboard-row'), len = rows.length, row, data = {tagName: this.tagName, items: []};
+                for (var i = len - 1; i >= 0; i--) {
+                   row = rows[i];
+                   data.items.unshift(row.exportConfig())
+                };
+                return data;
+            },
+
+            importConfig: function(config, clean){
+                if (clean) {
+                    var items = this.childNodes, len = items.length;
+                    for (var i = len - 1; i >= 0; i--) {
+                        items[i].destroy && items[i].destroy();
+                    }
+                };
+                if (config.items) {
+                    var len = config.items.length;
+                    for (var i = 0; i < len; i++) {
+                       this.appendChild(BRT.createElement(config.items[i]))
+                    };
+                };
             }
-        });
+        }, BRT.element));
     })();
     </script>
 </polymer-element>

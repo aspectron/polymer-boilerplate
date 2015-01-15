@@ -25,6 +25,8 @@
 
 	<!-- Using Custom Elements -->
 	<button onclick="addpanel()">Add Panel</button>
+	<button onclick="exportConfig()" id="exportConfig" style="display:none">Export Config</button>
+	<button onclick="importConfig()" id="importConfig" style="display:none">Import Config</button>
 	<brt-dashboard></brt-dashboard>
 
 	<script type="text/javascript">
@@ -39,13 +41,31 @@
 			c.menuitems = [{key: 'menu-1', value:'Menu 1'}, {key: 'menu-2', value:'Menu 2'}]
 			return c;
 		}
+
+		function exportConfig(){
+			var dashboard = document.querySelector('brt-dashboard');
+			localStorage.brtdashboard = JSON.stringify(dashboard.exportConfig());
+			console.log('dashboard', localStorage.brtdashboard)
+			showHideButtons()
+		}
+		function importConfig(){
+			var dashboard = document.querySelector('brt-dashboard');
+			dashboard.importConfig(JSON.parse(localStorage.brtdashboard), true);
+		}
 		function addpanel(){
 			var dashboard = document.querySelector('brt-dashboard');
 			dashboard.add(createPanel())
+			showHideButtons()
+		}
+
+		function showHideButtons(){
+			document.getElementById('importConfig').style.display = localStorage.brtdashboard ? '':'none';
+			document.getElementById('exportConfig').style.display = document.querySelector('brt-dashboard').childNodes.length ? '':'none';
 		}
 
 		window.addEventListener('polymer-ready', function(e) {
 			//alert('polymer-ready')
+			showHideButtons()
 		});
 	</script>
 </body>
