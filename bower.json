@@ -24,6 +24,7 @@
     "paper-dialog": "Polymer/paper-dialog#~0.5.2",
     "core-toolbar": "Polymer/core-toolbar#~0.5.2",
     "core-menu-button": "Polymer/core-menu-button#~0.5.2",
-    "core-dropdown-menu": "Polymer/core-dropdown-menu#~0.5.2"
+    "core-dropdown-menu": "Polymer/core-dropdown-menu#~0.5.2",
+    "aha-table": "~1.1.0"
   }
 }
